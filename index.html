@@ -22,9 +22,56 @@
         .abstract-section h2 {
             margin-top: 76px;
         }
+
+        .side-toc {
+            display: none;
+        }
+
+        .toc-target {
+            scroll-margin-top: 32px;
+        }
+
+        @media (min-width: 1500px) {
+            .side-toc {
+                display: block;
+                position: fixed;
+                top: 140px;
+                left: max(20px, calc((100vw - 1420px) / 2));
+                width: 200px;
+                padding-left: 18px;
+                border-left: 2px solid #e0e0e0;
+                font-size: 15px;
+                line-height: 1.35;
+                z-index: 10;
+            }
+
+            .side-toc a {
+                display: block;
+                color: #666;
+                margin: 0 0 12px;
+                text-decoration: none;
+            }
+
+            .side-toc a:hover,
+            .side-toc a.active {
+                color: #682F7F;
+                font-weight: 700;
+            }
+        }
     </style>
 </head>
 <body>
+    <nav class="side-toc" aria-label="Section navigation">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#setup">The setup</a>
+        <a href="#result-1">Result 1</a>
+        <a href="#result-2">Result 2</a>
+        <a href="#result-3">Result 3</a>
+        <a href="#result-4">Result 4</a>
+        <a href="#limitations">Limitations</a>
+        <a href="#bibtex">BibTeX</a>
+    </nav>
+
     <div class="container">
         <div style="text-align: center; margin-bottom: 30px;">
             <img src="assets/MilaLogo.png" alt="Mila – Quebec AI Institute" style="height: 92px; width: auto;">
@@ -84,7 +131,7 @@
             </div>
         </section>
 
-        <section class="abstract-section">
+        <section class="abstract-section toc-target" id="overview">
             <p>In <a href="https://arxiv.org/abs/2605.11845" target="_blank" rel="noreferrer">Probabilistic Calibration Is a Trainable Capability in Language Models</a>, we investigate whether stochastic fidelity can be explicitly trained into a model. We demonstrate that fine-tuning models strictly on mathematical distributions teaches them to map their internal probability estimates to stochastic outputs - a mechanical capability that generalizes to unseen probability distributions and successfully transfers to open-ended natural language tasks.</p>
 
             <p>In this post:</p>
@@ -115,7 +162,7 @@
                 <li><strong>Retention</strong>: Does this fine-tuning degrade the model's general capabilities?</li>
             </ol>
 
-            <h2>The setup</h2>
+            <h2 class="toc-target" id="setup">The setup</h2>
 
             <p>We train models on minimal prompts:</p>
 
@@ -137,7 +184,7 @@
 
             <p>Both variants train only LoRA adapters (rank 16, q/k/v/o projections), use five-decimal canonical outputs and share 1988 training prompts across 30 distribution families. They differ in output-space cap (1001 bins for soft, 16384 for hard) and in optimizer-step count (189 vs. 1,988) - hard-target needs more steps because its supervision is sparser.</p>
 
-            <h2>Result 1: Distributional fidelity generalizes to unseen distributions and parameters settings</h2>
+            <h2 class="toc-target" id="result-1">Result 1: Distributional fidelity generalizes to unseen distributions and parameters settings</h2>
 
             <p>We evaluate on two held-out splits: six OOD distribution families never seen during training, and unseen parameter settings for seen families. Both variants sharply reduce family-median normalized Wasserstein-1 distance and approximately an order-of-magnitude reduction in trie-based logit KL. The models are not merely better at removing formatting artifacts, we find that models that already had near-perfect base validity still show large reductions in both metrics. Hard-target fine-tuning shows stronger performance on unseen parameters, while soft-target fine-tuning is occasionally slightly better on held-out families. This ability to generalize to unseen distributions is remarkable because it rules out simple memorization. It indicates the model is actively combining its latent pre-training knowledge of mathematical distributions with a newly learned mechanical ability to sample from them.</p>
 
@@ -145,7 +192,7 @@
                 <img src="assets/results-6.jpeg" alt="WhatsApp Image 2026-05-19 at 23.12.02.jpeg" class="figure-image">
             </div>
 
-            <h2>Result 2: Stochastic capability transfers beyond the synthetic domain</h2>
+            <h2 class="toc-target" id="result-2">Result 2: Stochastic capability transfers beyond the synthetic domain</h2>
 
             <div class="figure">
                 <img src="assets/results-8.jpeg" alt="image.png" class="figure-image">
@@ -163,7 +210,7 @@
 
             <p><strong>NoveltyBench</strong> (<a href="https://arxiv.org/abs/2504.05228" target="_blank" rel="noreferrer">Zhang et al.</a>) evaluates whether a model can generate multiple functionally distinct, high-quality answers to the same prompt without suffering from mode collapse. To test this, ten responses per prompt are sampled, grouped by semantic similarity, and scored on both diversity and quality. Soft-target fine-tuning wins on overall utility for 8 of 12 models. The counterexamples (GPT-OSS-20B, Qwen3-0.6B) increase distinctness but lose utility, showing that broader semantic spread is only valuable when it stays aligned with response quality.</p>
 
-            <h2>Result 3: Retention costs are mixed and model-dependent</h2>
+            <h2 class="toc-target" id="result-3">Result 3: Retention costs are mixed and model-dependent</h2>
 
             <p>The costs to general model capabilities remain modest. The base checkpoint remains best on aggregate TinyBenchmarks (<a href="https://arxiv.org/abs/2402.14992" target="_blank" rel="noreferrer">Polo et al.</a>) gp-IRT for most models. At the task level, MMLU/HellaSwag/WinoGrande shift modestly upward but GSM8K shows a clear systematic regression.</p>
 
@@ -173,11 +220,11 @@
                 <img src="assets/results-7.jpeg" alt="image.png" class="figure-image" style="max-width: 78%;">
             </div>
 
-            <h2>Result 4: Inference-time prompting is not a substitute</h2>
+            <h2 class="toc-target" id="result-4">Result 4: Inference-time prompting is not a substitute</h2>
 
             <p>We compare against <a href="https://arxiv.org/abs/2510.21150" target="_blank" rel="noreferrer">String Seed of Thought (SSOT)</a> prompting, which asks the model to emit an internal random seed string and reason from it before producing a sample. SSOT can improve over the base checkpoint when the model reliably follows the seed-and-reasoning protocol, but it is brittle, model-dependent, and more expensive at inference time.</p>
 
-            <h2>Limitations</h2>
+            <h2 class="toc-target" id="limitations">Limitations</h2>
 
             <p>The main training signal comes from mathematical distribution prompts, not naturally occurring language-space distributions. Valid numeric output rate improves for weak baselines, so some gains may come from better instruction following, however we have evidence from cases where valid rate is already high and W1/logit KL still improve.</p>
 
@@ -186,7 +233,7 @@
             <p>Hard-target gets 1,988 optimizer steps to soft-target's 189. Capability-retention comparisons between the two variants are not budget-controlled.</p>
         </section>
 
-        <section class="bibtex-section" id="bibtex">
+        <section class="bibtex-section toc-target" id="bibtex">
             <h2 class="figure-title">BibTeX</h2>
             <div class="code-block" role="region" aria-label="BibTeX citation">
                 <button class="copy-btn" type="button" aria-label="Copy BibTeX" data-copy-target="#bibtex-code">Copy</button>
@@ -213,6 +260,30 @@
                     });
                 }, { threshold: 0.45 });
                 videoObserver.observe(heroVideo);
+            }
+
+            const tocLinks = Array.from(document.querySelectorAll('.side-toc a'));
+            const tocTargets = tocLinks
+                .map((link) => document.querySelector(link.getAttribute('href')))
+                .filter(Boolean);
+
+            function updateActiveTocLink(){
+                let activeId = tocTargets[0] ? tocTargets[0].id : null;
+                tocTargets.forEach((target) => {
+                    if (target.getBoundingClientRect().top <= 170) {
+                        activeId = target.id;
+                    }
+                });
+
+                tocLinks.forEach((link) => {
+                    link.classList.toggle('active', link.getAttribute('href') === '#' + activeId);
+                });
+            }
+
+            if (tocLinks.length && tocTargets.length) {
+                updateActiveTocLink();
+                window.addEventListener('scroll', updateActiveTocLink, { passive: true });
+                window.addEventListener('resize', updateActiveTocLink);
             }
 
             function copyText(text){
