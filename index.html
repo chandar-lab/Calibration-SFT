@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probabilistic Calibration Is a Trainable Capability in Language Models</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+        }
+
+        .abstract-section p,
+        .abstract-section ul,
+        .abstract-section ol {
+            margin-bottom: 22px;
+        }
+
+        .abstract-section h2 {
+            margin-top: 76px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <img src="assets/MilaLogo.png" alt="Mila – Quebec AI Institute" style="height: 92px; width: auto;">
+        </div>
+
+        <div style="border-bottom: 2px solid #e0e0e0; margin-bottom: 40px;"></div>
+
+        <header class="paper-header">
+            <h1 class="paper-title">
+                Probabilistic Calibration Is a Trainable Capability in Language Models
+            </h1>
+
+            <div class="authors-section">
+                <div class="authors">
+                    <span class="author"><strong><a href="https://dundalia.github.io" target="_blank" rel="noreferrer">Davide Baldelli</a></strong><sup>1,2,3,4,*</sup></span>
+                    <span class="author"><strong><a href="https://www.linkedin.com/in/sruthikuriakose?originalSubdomain=uk" target="_blank" rel="noreferrer">Sruthi Kuriakose</a></strong><sup>6</sup></span>
+                    <span class="author"><strong><a href="https://mhashemzadeh.github.io/home/" target="_blank" rel="noreferrer">Maryam Hashemzadeh</a></strong><sup>1,2,5</sup></span>
+                    <span class="author"><strong><a href="https://scholar.google.com/citations?user=lqDGv9YAAAAJ&hl=en" target="_blank" rel="noreferrer">Amal Zouaq</a></strong><sup>2,3,4</sup></span>
+                    <span class="author"><strong><a href="https://scholar.google.co.in/citations?user=yxWtZLAAAAAJ&hl=en" target="_blank" rel="noreferrer">Sarath Chandar</a></strong><sup>1,2,4</sup></span>
+                </div>
+
+                <div class="affiliations">
+                    <div class="affiliation"><sup>1</sup>Chandar Research Lab</div>
+                    <div class="affiliation"><sup>2</sup>Mila – Quebec AI Institute</div>
+                    <div class="affiliation"><sup>3</sup>LAMA-WeST Lab</div>
+                    <div class="affiliation"><sup>4</sup>Polytechnique Montréal</div>
+                    <div class="affiliation"><sup>5</sup>Université de Montréal</div>
+                    <div class="affiliation"><sup>6</sup>Independent researcher</div>
+                </div>
+
+                <div class="footnote">
+                    <sup>*</sup>Corresponding author
+                </div>
+
+                <div class="contact">
+                    <div class="email">davide.baldelli@mila.quebec</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="links-section">
+            <a href="https://arxiv.org/abs/2605.11845" class="link-button" target="_blank" rel="noreferrer">
+                <img src="assets/ArxivIcon.png" alt="Paper" class="button-icon">
+                <span>Paper</span>
+            </a>
+            <a href="https://github.com/chandar-lab/Calibration-SFT" class="link-button" target="_blank" rel="noreferrer">
+                <img src="assets/GithubIcon.png" alt="GitHub" class="button-icon">
+                <span>GitHub</span>
+            </a>
+        </div>
+
+        <section class="figures-section" style="margin: 70px 0;">
+            <div class="figure" style="margin: 0 20px;">
+                <video id="hero-video" class="figure-image" controls muted playsinline preload="metadata" style="width: 100%;">
+                    <source src="assets/Video (3).mp4" type="video/mp4">
+                </video>
+            </div>
+        </section>
+
+        <section class="abstract-section">
+            <p>In <a href="https://arxiv.org/abs/2605.11845" target="_blank" rel="noreferrer">Probabilistic Calibration Is a Trainable Capability in Language Models</a>, we investigate whether stochastic fidelity can be explicitly trained into a model. We demonstrate that fine-tuning models strictly on mathematical distributions teaches them to map their internal probability estimates to stochastic outputs - a mechanical capability that generalizes to unseen probability distributions and successfully transfers to open-ended natural language tasks.</p>
+
+            <p>In this post:</p>
+
+            <ul>
+                <li>We explain why current language models are fundamentally weak native samplers that suffer from severe mode collapse.</li>
+                <li>We fine-tune 12 models on known mathematical distributions using two different techniques: soft-target, where models are trained to match the exact target distribution at each decoding step; and hard-target, where models are trained to generate exact outputs from sampled target tokens.</li>
+                <li>We demonstrate that this training succeeds even on completely held-out distribution families and novel parameter combinations.</li>
+                <li>We show that this purely mathematical training transfers to natural language tasks with implicit targets, like balancing multiple-choice answers or generating genuinely diverse text.</li>
+                <li>We prove that the costs to general model capabilities are modest, ruling out the hypothesis that we are merely flattening probabilities across the vocabulary.</li>
+            </ul>
+
+            <div style="text-align: center; margin: 70px 0; color: #682F7F; font-size: 28px; letter-spacing: 12px;">...</div>
+
+            <p>Pseudo-random generation solved the problem of sampling from mathematical distributions on computers. Facing a similar need in natural language, it feels natural to simply ask an LLM: <em>"please name a random city."</em> However, this leads to the disappointing discovery that language models are heavily biased and suffer from mode collapse. Ask Qwen3 to pick a random weekday, and 80% of its mass lands on Wednesday. Ask Gemma-3 for a random city, and 74% of its samples land on just its top four choices. Ask models to generate multiple-choice questions, and the correct answer stubbornly drifts toward "C". While they appear stochastic at the token level, their actual outputs collapse onto extremely narrow subsets.</p>
+
+            <p>This is a critical failure. We often need models to generate synthetic data from a single prompt, which requires actual diversity, or we simply might want them to act more creatively. But unfortunately, models suffer from mode collapse because during training they receive no incentive to spread probability mass beyond the most likely tokens.</p>
+
+            <p>Recent work confirms this, demonstrating that language models are ultimately incapable of acting as calibrated random samplers in mathematical space. When asked to sample a number from a given distribution, their empirical CDFs are heavily skewed and biased (<a href="https://arxiv.org/abs/2601.05414" target="_blank" rel="noreferrer">Zhao et al.</a>). This also reflects in natural language space: when asked to generate multiple-choice questions, the correct answers should ideally be uniformly distributed among the choices, but LLMs present a heavy bias towards a specific position—often "C" (<a href="https://arxiv.org/abs/2604.06543" target="_blank" rel="noreferrer">Gu et al.</a>).</p>
+
+            <p>One curious, recently proposed workaround asks LLMs to first output a random string and then manipulate it to generate the final output (<a href="https://arxiv.org/abs/2510.21150" target="_blank" rel="noreferrer">Misaki and Akiba</a>). It has been shown that this technique actually improves randomness and removes bias in simple settings.</p>
+
+            <p>The natural next question is: <em>can stochastic fidelity be trained into the model rather than patched at inference?</em> We define this target as distributional calibration—aligning output probabilities with a specified statistical distribution, which is distinct from epistemic uncertainty calibration. To test this, we fine-tune models only on mathematical distributions, where the exact target probabilities are known, and measure success across three axes:</p>
+
+            <ol>
+                <li><strong>Distributional fidelity</strong>: Do empirical samples match the true distribution? We test this both on completely held-out distribution families, and on unseen parameter values (like a new mean or variance) for familiar distributions.</li>
+                <li><strong>Transfer</strong>: Does this purely mathematical training transfer to natural language tasks with implicit targets? For example, can it reduce bias when asking for a random city, balance multiple-choice answers, or force the model to generate genuinely diverse text?</li>
+                <li><strong>Retention</strong>: Does this fine-tuning degrade the model's general capabilities?</li>
+            </ol>
+
+            <h2>The setup</h2>
+
+            <p>We train models on minimal prompts:</p>
+
+            <p>Generate exactly ONE random number from a [distribution] distribution with parameters [params]. Output ONLY the number.</p>
+
+            <p>Each prompt specifies a distribution family and parameter setting, inducing a target distribution over valid numerical output strings. Continuous distributions are discretized; discrete distributions use truncated support. The benchmark includes 30 distribution families: 24 seen during training and 6 held-out OOD families reserved for test-time evaluation (Bernoulli, Poisson, Maxwell, TruncNorm, Chi, Weibull).</p>
+
+            <p>We evaluate 12 models across four families (Qwen3, Gemma-3-it, Llama-3.2-Instruct, GPT-OSS) from 0.6B to 27B parameters. Each model is evaluated in three conditions: the original checkpoint (Base), a soft-target adapter (Soft), and a hard-target adapter (Hard).</p>
+
+            <p>We compare two ways to train against this target.</p>
+
+            <div class="figure">
+                <img src="assets/Main-3.png" alt="Main-3.png" class="figure-image">
+            </div>
+
+            <p><strong>Soft-target</strong>: We build a prefix trie over all valid canonical outputs. At each decoding prefix , the method computes the target next-token distribution   induced by the remaining renormalized probability mass under the true target distribution. The loss is KL divergence between this trie-induced next-token target and the model’s next-token distribution, averaged along a sampled training path. This gives dense, prefix-level supervision over probability mass allocation.</p>
+
+            <p><strong>Hard-target</strong>: We sample canonical outputs from the same target distribution  and train the model with masked cross-entropy on those sampled completions. Each example gives one sampled path through the trie, so supervision is sparse; we compensate with 16 sampled completions per prompt per epoch</p>
+
+            <p>Both variants train only LoRA adapters (rank 16, q/k/v/o projections), use five-decimal canonical outputs and share 1988 training prompts across 30 distribution families. They differ in output-space cap (1001 bins for soft, 16384 for hard) and in optimizer-step count (189 vs. 1,988) - hard-target needs more steps because its supervision is sparser.</p>
+
+            <h2>Result 1: Distributional fidelity generalizes to unseen distributions and parameters settings</h2>
+
+            <p>We evaluate on two held-out splits: six OOD distribution families never seen during training, and unseen parameter settings for seen families. Both variants sharply reduce family-median normalized Wasserstein-1 distance and approximately an order-of-magnitude reduction in trie-based logit KL. The models are not merely better at removing formatting artifacts, we find that models that already had near-perfect base validity still show large reductions in both metrics. Hard-target fine-tuning shows stronger performance on unseen parameters, while soft-target fine-tuning is occasionally slightly better on held-out families. This ability to generalize to unseen distributions is remarkable because it rules out simple memorization. It indicates the model is actively combining its latent pre-training knowledge of mathematical distributions with a newly learned mechanical ability to sample from them.</p>
+
+            <div class="figure">
+                <img src="assets/results-2.jpeg" alt="WhatsApp Image 2026-05-19 at 23.12.02.jpeg" class="figure-image">
+            </div>
+
+            <h2>Result 2: Stochastic capability transfers beyond the synthetic domain</h2>
+
+            <div class="figure">
+                <img src="assets/results-8.jpeg" alt="image.png" class="figure-image">
+            </div>
+
+            <p>Support Size and Unique Output Rate measure open-ended random-generation diversity; MCQ TV measures answer-position balance over parseable generations; NoveltyBench Utility is the benchmark’s patience-discounted reward metric.</p>
+
+            <p><strong>Open-ended random generation.</strong> We constructed a 102 prompt benchmark spanning categories such as names,  cities, animals, foods, chemical elements and landmarks with varying prompt wording and a strict output contract. We measured the number of first-step next tokens required to cover 90% of the model’s probability mass as well as the  fraction of distinct samples after normalization on 100 independent samples. Soft-target fine-tuning increases top-90% next-token support for every model by 1-2 orders of magnitude. For a “random weekday” prompt, Qwen3-14B places 80% mass on Wednesday, however both calibrated variants spread mass across multiple days with the top answer falling to roughly 40%. Gemma-3-27B-it places 74% of samples on its top four cities when prompted to name a random city, while the soft and hard-target checkpoints reduce this concentration to 15% and 24%, respectively.</p>
+
+            <div class="figure">
+                <img src="assets/results-3.jpeg" alt="Frame 8.png" class="figure-image">
+            </div>
+
+            <p><strong>MCQ generation with answer-position balance</strong>. Each model generates 1000 independent medical MCQs under a prompt that encourages uniform placement of the correct answer. Both variants reduce TV distance from uniform, most consistently in Qwen. For other models, transfer is mixed and must be read jointly with format validity, i.e, low TV with low valid rate isn't a calibration success.</p>
+
+            <p><strong>NoveltyBench</strong> (<a href="https://arxiv.org/abs/2504.05228" target="_blank" rel="noreferrer">Zhang et al.</a>) evaluates whether a model can generate multiple functionally distinct, high-quality answers to the same prompt without suffering from mode collapse. To test this, ten responses per prompt are sampled, grouped by semantic similarity, and scored on both diversity and quality. Soft-target fine-tuning wins on overall utility for 8 of 12 models. The counterexamples (GPT-OSS-20B, Qwen3-0.6B) increase distinctness but lose utility, showing that broader semantic spread is only valuable when it stays aligned with response quality.</p>
+
+            <h2>Result 3: Retention costs are mixed and model-dependent</h2>
+
+            <p>The costs to general model capabilities remain modest. The base checkpoint remains best on aggregate TinyBenchmarks (<a href="https://arxiv.org/abs/2402.14992" target="_blank" rel="noreferrer">Polo et al.</a>) gp-IRT for most models. At the task level, MMLU/HellaSwag/WinoGrande shift modestly upward but GSM8K shows a clear systematic regression.</p>
+
+            <p>One might suspect that this increased diversity and calibration comes at the cost of broadly flattening probability distributions across tokens, consequently lowering overall confidence and increasing perplexity. To rule this out, we measured retained language-model fit using PALOMA perplexity [Magnusson et al., 2024]. The results are highly favorable: at least one fine-tuned variant beats the base model on every PALOMA slice. If this hypothesis were true, held-out text likelihood would systematically regress—but it doesn't.</p>
+
+            <div class="figure">
+                <img src="assets/results-7.jpeg" alt="image.png" class="figure-image" style="max-width: 78%;">
+            </div>
+
+            <h2>Result 4: Inference-time prompting is not a substitute</h2>
+
+            <p>We compare against <a href="https://arxiv.org/abs/2510.21150" target="_blank" rel="noreferrer">String Seed of Thought (SSOT)</a> prompting, which asks the model to emit an internal random seed string and reason from it before producing a sample. SSOT can improve over the base checkpoint when the model reliably follows the seed-and-reasoning protocol, but it is brittle, model-dependent, and more expensive at inference time.</p>
+
+            <h2>Limitations</h2>
+
+            <p>The main training signal comes from mathematical distribution prompts, not naturally occurring language-space distributions. Valid numeric output rate improves for weak baselines, so some gains may come from better instruction following, however we have evidence from cases where valid rate is already high and W1/logit KL still improve.</p>
+
+            <p>Calibration gains can degrade reasoning benchmarks, especially GSM8K. This matters for general-purpose deployment.</p>
+
+            <p>Hard-target gets 1,988 optimizer steps to soft-target's 189. Capability-retention comparisons between the two variants are not budget-controlled.</p>
+        </section>
+
+        <section class="bibtex-section" id="bibtex">
+            <h2 class="figure-title">BibTeX</h2>
+            <div class="code-block" role="region" aria-label="BibTeX citation">
+                <button class="copy-btn" type="button" aria-label="Copy BibTeX" data-copy-target="#bibtex-code">Copy</button>
+                <pre id="bibtex-code">@article{baldelli2026probabilistic,
+  title={Probabilistic Calibration Is a Trainable Capability in Language Models},
+  author={Baldelli, Davide and Kuriakose, Sruthi and Hashemzadeh, Maryam and Zouaq, Amal and Chandar, Sarath},
+  journal={arXiv preprint arXiv:2605.11845},
+  year={2026}
+}</pre>
+            </div>
+        </section>
+    </div>
+    <script>
+        (function(){
+            const heroVideo = document.getElementById('hero-video');
+            if (heroVideo && 'IntersectionObserver' in window) {
+                const videoObserver = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            heroVideo.play().catch(() => {});
+                        } else {
+                            heroVideo.pause();
+                        }
+                    });
+                }, { threshold: 0.45 });
+                videoObserver.observe(heroVideo);
+            }
+
+            function copyText(text){
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text);
+                }
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                try { document.execCommand('copy'); } catch(e) {}
+                document.body.removeChild(ta);
+                return Promise.resolve();
+            }
+
+            document.addEventListener('click', function(e){
+                const btn = e.target.closest('.copy-btn');
+                if(!btn) return;
+                const selector = btn.getAttribute('data-copy-target');
+                const target = selector ? document.querySelector(selector) : btn.parentElement.querySelector('pre');
+                if(!target) return;
+                const toCopy = target.innerText;
+                copyText(toCopy).then(() => {
+                    const original = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
